@@ -1,3 +1,4 @@
+const char* topic_solenoid = "" // Topic you want to subscribe to 
 void setup() {
   // put your setup code here, to run once:
 
@@ -19,4 +20,16 @@ void callback(char* topic, byte* payload, unsigned int length){
   if((char)payload[0] =='1'){ //open Solenoid
     } 
   
+void reconnect(){
+  while(!client.connected()){
+    char* clientID = "ESP32_watering";
+      if(client.connect(clientID){
+        client.subscribe(topic_solenoid);
+        }
+      else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state();
+        delay(5000);
+        }
+    }
 }
