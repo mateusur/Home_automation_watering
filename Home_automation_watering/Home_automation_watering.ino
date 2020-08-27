@@ -1,12 +1,13 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #define MSG_BUFFER_SIZE 50
+#define SOLENOID 23
 
 const char* ssid = ""; //Your WiFi ssid
 const char* password = ""; //Your WiFi password
 const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
 int server_port = 1883; //Server port, usually 1883 or 8883
-const char* topic_solenoid = ""; // Topic you want to subscribe to 
+const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to 
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -17,7 +18,8 @@ void setup() {
   Serial.begin(115200);
   setup_wifi();
   client.setServer(server_ip, server_port);
-
+  client.setCallback(callback);
+  pinMode(SOLENOID,OUTPUT);
 }
 
 void loop() {
@@ -57,15 +59,23 @@ void callback(char* topic, byte* payload, unsigned int length){
   Serial.println();
 
   if((char)payload[0] =='1'){ //open Solenoid
+    Serial.println("HELLO");
+    digitalWrite(SOLENOID, HIGH); 
+
     }
   else if((char)payload[0] == '0'){ //close Solenoid
+    Serial.println("BYE");
+    digitalWrite(SOLENOID, LOW); 
+
     }  
 }
+
 void reconnect(){
   char* clientID = "ESP32_watering";
   while(!client.connected()){
       if(client.connect(clientID)){
-        client.subscribe(topic_solenoid);
+        client.subscribe(topic_solenoid,1);
+        //client.subscribe("#",0);
         }
       else {
         Serial.print("failed, rc=");
