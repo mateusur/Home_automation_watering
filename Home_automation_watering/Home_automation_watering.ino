@@ -1,18 +1,22 @@
-#include <WiFi.h>
+//#include <WiFi.h> // Use with esp32
+#include <ESP8266WiFi.h>  // Use with esp8266
 #include <PubSubClient.h>
 #define MSG_BUFFER_SIZE 50
 #define SOLENOID 23
 
-const char* ssid = ""; //Your WiFi ssid
-const char* password = ""; //Your WiFi password
-const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
 int server_port = 1883; //Server port, usually 1883 or 8883
 const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to 
-
+ 
 WiFiClient espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
+unsigned long previousMillis = 0;
+const int ledPin =  2;
+bool operational = false;
+unsigned long currentMillis;
+long interval = 1000;           // interval at which to blink (milliseconds)
+int ledState = LOW;             // ledState used to set the LED
 
 void setup() {
   Serial.begin(115200);
@@ -20,6 +24,8 @@ void setup() {
   client.setServer(server_ip, server_port);
   client.setCallback(callback);
   pinMode(SOLENOID,OUTPUT);
+  pinMode(ledPin, OUTPUT);
+  
 }
 
 void loop() {
@@ -27,6 +33,13 @@ void loop() {
     reconnect();
   client.loop();
 
+  unsigned long currentMillis = millis();
+  
+  if ( currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    digitalWrite(ledPin, LOW);
+  }
+   
 }
 
 void setup_wifi(){
@@ -53,10 +66,20 @@ void callback(char* topic, byte* payload, unsigned int length){
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+  String watering_time="";
+  char* topic2 = "garden/watering/solenoid";
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
+    watering_time += (char)payload[i];
   }
+  
   Serial.println();
+  if( strcmp(topic, topic2) == 0){
+    //operational = true;
+    digitalWrite(ledPin, HIGH);
+    interval = watering_time.toInt()*1000;
+    previousMillis = millis();
+   }
 
   if((char)payload[0] =='1'){ //open Solenoid
     Serial.println("HELLO");
