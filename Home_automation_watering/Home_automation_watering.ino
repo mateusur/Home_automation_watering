@@ -20,7 +20,7 @@ const int ledPin =  2;
 unsigned long currentMillis=0;
 unsigned long previousMillis = 0;
 bool operational = false;
-unsigned long interval = 1000;           // interval at which to blink (milliseconds)
+unsigned long interval = 1000;
 //Colling down solenoid
 unsigned long previousMillis2 = 0;
 bool cold = true;
@@ -83,14 +83,13 @@ void callback(char* topic, byte* payload, unsigned int length){
   Serial.print(topic);
   Serial.print("] ");
   String watering_time="";
-  char* topic2 = "garden/watering/solenoid";
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
     watering_time += (char)payload[i];
   }
   
   Serial.println();
-  if( strcmp(topic, topic2) == 0){
+  if( strcmp(topic, topic_solenoid) == 0){
     operational = true;
     if(cold)
     digitalWrite(ledPin, HIGH);
@@ -98,17 +97,6 @@ void callback(char* topic, byte* payload, unsigned int length){
     interval = watering_time.toInt()*1000;
     
    }
-
-  if((char)payload[0] =='1'){ //open Solenoid
-    Serial.println("HELLO");
-    digitalWrite(SOLENOID, HIGH); 
-
-    }
-  else if((char)payload[0] == '0'){ //close Solenoid
-    Serial.println("BYE");
-    digitalWrite(SOLENOID, LOW); 
-
-    }  
 }
 
 void reconnect(){
