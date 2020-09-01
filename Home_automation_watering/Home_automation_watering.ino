@@ -1,9 +1,13 @@
-//#include <WiFi.h> // Use with esp32
+  //#include <WiFi.h> // Use with esp32
 #include <ESP8266WiFi.h>  // Use with esp8266
 #include <PubSubClient.h>
 #define MSG_BUFFER_SIZE 50
 #define SOLENOID 23
 
+
+const char* ssid = ""; //Your WiFi ssid
+const char* password = ""; //Your WiFi password
+const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
 int server_port = 1883; //Server port, usually 1883 or 8883
 const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to 
  
@@ -11,12 +15,16 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
-unsigned long previousMillis = 0;
 const int ledPin =  2;
+//Watering for peroid of time
+unsigned long currentMillis=0;
+unsigned long previousMillis = 0;
 bool operational = false;
-unsigned long currentMillis;
-long interval = 1000;           // interval at which to blink (milliseconds)
-int ledState = LOW;             // ledState used to set the LED
+unsigned long interval = 1000;           // interval at which to blink (milliseconds)
+//Colling down solenoid
+unsigned long previousMillis2 = 0;
+bool cold = true;
+const unsigned long cooldown_interval = 300000;
 
 void setup() {
   Serial.begin(115200);
@@ -33,11 +41,19 @@ void loop() {
     reconnect();
   client.loop();
 
-  unsigned long currentMillis = millis();
-  
-  if ( currentMillis - previousMillis >= interval) {
+  currentMillis = millis();
+  if(cold == false && currentMillis - previousMillis2 >= cooldown_interval){
+    cold = true;
+    operational = false;
+    Serial.println("COLD");   
+    }
+  if( cold && operational && currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
+    previousMillis2 = currentMillis;
     digitalWrite(ledPin, LOW);
+    operational = false;
+    cold = false;
+    Serial.println("HOT");
   }
    
 }
@@ -75,10 +91,12 @@ void callback(char* topic, byte* payload, unsigned int length){
   
   Serial.println();
   if( strcmp(topic, topic2) == 0){
-    //operational = true;
+    operational = true;
+    if(cold)
     digitalWrite(ledPin, HIGH);
-    interval = watering_time.toInt()*1000;
     previousMillis = millis();
+    interval = watering_time.toInt()*1000;
+    
    }
 
   if((char)payload[0] =='1'){ //open Solenoid
