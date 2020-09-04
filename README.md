@@ -5,5 +5,5 @@ ESP32 code for home automation project using MQTT. This part of code will be res
 - [Arduino IDE](https://www.arduino.cc/en/main/software)
 - [Sourcetree](https://www.sourcetreeapp.com/)  
 ## End product 
-![](images/front.png)
-![](images/left.jpg)
+![](Images/front.png)
+![](Images/left.jpg)
