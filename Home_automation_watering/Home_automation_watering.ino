@@ -1,22 +1,23 @@
+
   //#include <WiFi.h> // Use with esp32
 //#include <C:\Users\Student241614\Documents\Arduino\libraries\ESP8266WiFi\src\ESP8266WiFi.h>
 #include <ESP8266WiFi.h>  // Use with esp8266
 #include <PubSubClient.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
+
 #define MSG_BUFFER_SIZE 50
 #define SOLENOID 5
 
-//const char* ssid = "GREENLAN"; //Your WiFi ssid
-//const char* password = "green0912"; //Your WiFi password
-//const char* server_ip = "192.168.1.8"; //Sever name or ip(format xxx.xxx.x.x)
-
-const char* ssid = ""; //Your WiFi ssid
-const char* password = ""; //Your WiFi password
-const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
+//
+//const char* ssid = ""; //Your WiFi ssid
+//const char* password = ""; //Your WiFi password
+//const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
 int server_port = 1883; //Server port, usually 1883 or 8883
 const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to 
- 
-WiFiClient espClient;
-PubSubClient client(espClient);
+const char* topics_solenoid[7] = { "garden/watering/solenoid/Sunday", "garden/watering/solenoid/Monday", "garden/watering/solenoid/Tuesday", "garden/watering/solenoid/Wednesday"
+    , "garden/watering/solenoid/Thursday", "garden/watering/solenoid/Friday", "garden/watering/solenoid/Saturday" };
+
 unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 const int ledPin =  2;
@@ -29,12 +30,26 @@ unsigned long interval = 1000;
 unsigned long previousMillis2 = 0;
 bool cold = true;
 const unsigned long cooldown_interval = 300000; // 5min
+//Time
+const long utcOffsetInSeconds = 7200;
+unsigned long previousMillis3 = 0;
+char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+char timing[7][5] = { "0000","0000","0000","0000","0000","0000","0000" };
+int today = -1; //day of the week, sunday is 0
+bool watered = false;
+// Define NTP Client to get time
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 void setup() {
   Serial.begin(115200);
   setup_wifi();
   client.setServer(server_ip, server_port);
   client.setCallback(callback);
+  timeClient.begin();
   pinMode(SOLENOID,OUTPUT);
   pinMode(ledPin, OUTPUT);
   
@@ -60,7 +75,111 @@ void loop() {
     cold = false;
     Serial.println("HOT");
   }
-   
+  timeClient.update();
+  
+  if (timeClient.getDay() != today) {
+      today = timeClient.getDay();
+      watered = false;
+  }
+  //daysOfTheWeek[timeClient.getDay()]
+      switch (today) {
+      case 0: //sunday
+          if (watered == false && timing[0][0] == '1' && timeClient.getHours() >= (int)timing[0][1] && timeClient.getMinutes() >= (int)timing[0][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[0][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }          
+          }
+          break;
+      case 1:
+          if (watered == false && timing[1][0] == '1' && timeClient.getHours() >= (int)timing[1][1] && timeClient.getMinutes() >= (int)timing[1][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[1][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+          break;
+      case 2:
+        
+          if (watered == false && (int)timing[2][0] == 1 && timeClient.getHours() >= (int)timing[2][1] && timeClient.getMinutes() >= (int)timing[2][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[2][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+          break;
+      case 3:
+          if (watered == false && timing[3][0] == '1' && timeClient.getHours() >= (int)timing[3][1] && timeClient.getMinutes() >= (int)timing[3][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[3][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+          break;
+      case 4:
+          if (watered == false && timing[4][0] == '1' && timeClient.getHours() >= (int)timing[4][1] && timeClient.getMinutes() >= (int)timing[4][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[4][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+          break;
+      case 5:
+          if (watered == false && timing[5][0] == '1' && timeClient.getHours() >= (int)timing[5][1] && timeClient.getMinutes() >= (int)timing[5][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[5][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+          break;
+      case 6:
+          if (watered == true && timing[6][0] == '1' && timeClient.getHours() >= (int)timing[6][1] && timeClient.getMinutes() >= (int)timing[6][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[1][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+          break;
+      default:
+          if (watered == false && timing[7][0] == '1' && timeClient.getHours() >= (int)timing[7][1] && timeClient.getMinutes() >= (int)timing[7][2]) {
+              if (cold) {
+                  digitalWrite(ledPin, HIGH);
+                  digitalWrite(SOLENOID, HIGH);
+                  previousMillis = millis();
+                  interval = (int)timing[7][3] * 1000 * 60;
+                  operational = true;
+                  watered = true;
+              }
+          }
+      }
 }
 
 void setup_wifi(){
@@ -89,21 +208,66 @@ void callback(char* topic, byte* payload, unsigned int length){
   Serial.print("] ");
   String watering_time="";
   for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-    watering_time += (char)payload[i];
+      Serial.print((char)payload[i]);
+      Serial.print(" ");
   }
-  
+  Serial.println();
+    for (int i = 0; i < length; i++) {
+      Serial.print(payload[i]);
+      Serial.print(" ");
+  }
+
   Serial.println();
   if( strcmp(topic, topic_solenoid) == 0){
+      for (int i = 0; i < length; i++) {
+          Serial.print((char)payload[i]);
+          watering_time += (char)payload[i];
+      }
     operational = true;
     if(cold){
       digitalWrite(ledPin, HIGH);
-    digitalWrite(SOLENOID, HIGH);
+        digitalWrite(SOLENOID, HIGH);
       }
     previousMillis = millis();
     interval = watering_time.toInt()*1000*60;
     
    }
+  if (strcmp(topic, topics_solenoid[0]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[0][i] = (char)payload[i];
+      }
+  }
+  if (strcmp(topic, topics_solenoid[1]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[1][i] = (char)payload[i];
+      }
+  }
+  if (strcmp(topic, topics_solenoid[2]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[2][i] = (char)payload[i];
+      }
+  }
+  if (strcmp(topic, topics_solenoid[3]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[3][i] = (char)payload[i];
+      }
+  }
+  if (strcmp(topic, topics_solenoid[4]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[4][i] = (char)payload[i];
+      }
+  }
+  if (strcmp(topic, topics_solenoid[5]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[5][i] = (char)payload[i];
+      }
+  }
+  if (strcmp(topic, topics_solenoid[6]) == 0) {
+   for (int i = 0; i < 4; i++) {
+          timing[6][i] = (char)payload[i];
+      }
+  }
+   
 }
 
 void reconnect(){
@@ -111,7 +275,8 @@ void reconnect(){
   while(!client.connected()){
       if(client.connect(clientID)){
         client.subscribe(topic_solenoid,0);
-        //client.subscribe("#",0);
+        for(int i=0;i<7;++i)
+        client.subscribe(topics_solenoid[i],0);
         }
       else {
         Serial.print("failed, rc=");
