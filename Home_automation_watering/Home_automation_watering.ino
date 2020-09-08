@@ -1,9 +1,13 @@
   //#include <WiFi.h> // Use with esp32
+//#include <C:\Users\Student241614\Documents\Arduino\libraries\ESP8266WiFi\src\ESP8266WiFi.h>
 #include <ESP8266WiFi.h>  // Use with esp8266
 #include <PubSubClient.h>
 #define MSG_BUFFER_SIZE 50
-#define SOLENOID 23
+#define SOLENOID 5
 
+//const char* ssid = "GREENLAN"; //Your WiFi ssid
+//const char* password = "green0912"; //Your WiFi password
+//const char* server_ip = "192.168.1.8"; //Sever name or ip(format xxx.xxx.x.x)
 
 const char* ssid = ""; //Your WiFi ssid
 const char* password = ""; //Your WiFi password
@@ -24,7 +28,7 @@ unsigned long interval = 1000;
 //Colling down solenoid
 unsigned long previousMillis2 = 0;
 bool cold = true;
-const unsigned long cooldown_interval = 300000;
+const unsigned long cooldown_interval = 300000; // 5min
 
 void setup() {
   Serial.begin(115200);
@@ -51,6 +55,7 @@ void loop() {
     previousMillis = currentMillis;
     previousMillis2 = currentMillis;
     digitalWrite(ledPin, LOW);
+    digitalWrite(SOLENOID, LOW);
     operational = false;
     cold = false;
     Serial.println("HOT");
@@ -91,10 +96,12 @@ void callback(char* topic, byte* payload, unsigned int length){
   Serial.println();
   if( strcmp(topic, topic_solenoid) == 0){
     operational = true;
-    if(cold)
-    digitalWrite(ledPin, HIGH);
+    if(cold){
+      digitalWrite(ledPin, HIGH);
+    digitalWrite(SOLENOID, HIGH);
+      }
     previousMillis = millis();
-    interval = watering_time.toInt()*1000;
+    interval = watering_time.toInt()*1000*60;
     
    }
 }
@@ -103,7 +110,7 @@ void reconnect(){
   char* clientID = "ESP32_watering";
   while(!client.connected()){
       if(client.connect(clientID)){
-        client.subscribe(topic_solenoid,1);
+        client.subscribe(topic_solenoid,0);
         //client.subscribe("#",0);
         }
       else {
