@@ -9,10 +9,10 @@
 #define MSG_BUFFER_SIZE 50
 #define SOLENOID 5
 
-//
-//const char* ssid = ""; //Your WiFi ssid
-//const char* password = ""; //Your WiFi password
-//const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
+
+const char* ssid = ""; //Your WiFi ssid
+const char* password = ""; //Your WiFi password
+const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
 int server_port = 1883; //Server port, usually 1883 or 8883
 const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to 
 const char* topics_solenoid[7] = { "garden/watering/solenoid/Sunday", "garden/watering/solenoid/Monday", "garden/watering/solenoid/Tuesday", "garden/watering/solenoid/Wednesday"
