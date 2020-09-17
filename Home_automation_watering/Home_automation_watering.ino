@@ -7,11 +7,12 @@
 
 #define MSG_BUFFER_SIZE 50
 #define SOLENOID 5
-//
+
 
 const char* ssid = ""; //Your WiFi ssid
 const char* password = ""; //Your WiFi password
 const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
+
 int server_port = 1883; //Server port, usually 1883 or 8883
 const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to
 const char* topic_watering = "garden/watering/watered";
@@ -76,8 +77,10 @@ void loop() {
   timeClient.update();
 
   if (timeClient.getDay() != today) {
-    if(today != -1)
+    if(today != -1){
       client.publish(topic_watering, "0",true);
+      delay(500);
+      }
     today = timeClient.getDay();
     watered = false;
   }
@@ -92,6 +95,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
       }
       break;
@@ -105,6 +109,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
       }
       break;
@@ -118,6 +123,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
       }
       break;
@@ -131,6 +137,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
 
       }
@@ -145,6 +152,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
       }
       break;
@@ -158,6 +166,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
       }
       break;
@@ -171,6 +180,7 @@ void loop() {
           operational = true;
           watered = true;
           client.publish(topic_watering, "1",true);
+          delay(500);
         }
       }
       break;
@@ -231,8 +241,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
      for (int i = 0; i < length; i++) {
        watered2 = (char)payload[i]; 
     }
-    if(watered2=='1')
-    Serial.println("porownanie dziala");
     }
   if (strcmp(topic, topics_solenoid[0]) == 0) {
     for (int i = 0; i < 4; i++) {
