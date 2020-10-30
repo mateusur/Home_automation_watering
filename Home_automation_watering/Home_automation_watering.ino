@@ -9,15 +9,18 @@
 #define SOLENOID 5
 
 
-const char* ssid = ""; //Your WiFi ssid
-const char* password = ""; //Your WiFi password
-const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
+//const char* ssid = ""; //Your WiFi ssid
+//const char* password = ""; //Your WiFi password
+//const char* server_ip = ""; //Sever name or ip(format xxx.xxx.x.x)
 
 int server_port = 1883; //Server port, usually 1883 or 8883
 const char* topic_solenoid = "garden/watering/solenoid"; // Topic you want to subscribe to
 const char* topic_watering = "garden/watering/watered";
 const char* topics_solenoid[7] = { "garden/watering/solenoid/sunday", "garden/watering/solenoid/monday", "garden/watering/solenoid/tuesday", "garden/watering/solenoid/wednesday"
                                    , "garden/watering/solenoid/thursday", "garden/watering/solenoid/friday", "garden/watering/solenoid/saturday"};
+const char* topic_is_ground_wet = "garden/watering/ground/wet";
+//const char* topic_ground_status = "garden/watering/ground/status"; //not used
+const char* topic_rain_status = "garden/watering/rain/status";
 unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 const int ledPin =  2;
@@ -36,7 +39,9 @@ unsigned long previousMillis3 = 0;
 char timing[7][5] = { "0000", "0000", "0000", "0000", "0000", "0000", "0000" };
 int today = -1; //day of the week, sunday is 0
 bool watered = false;
-char watered2='0';
+char watered2= '0';
+int ground_wet = 1; // 0 - ground is dry
+bool asked = false; // if false we didn't ask about rain yet
 // Define NTP Client to get time
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
@@ -87,13 +92,18 @@ void loop() {
   switch (today) {
     case 0: //sunday
       if (watered2 == '0' && (int)timing[0][0] == 1 && timeClient.getHours() >= (int)timing[0][1] && timeClient.getMinutes() >= (int)timing[0][2]) {
-        if (cold) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
           interval = (int)timing[0][3] * 1000 * 60;
           operational = true;
           watered = true;
+          asked = false;
           client.publish(topic_watering, "1",true);
           delay(500);
         }
@@ -101,7 +111,11 @@ void loop() {
       break;
     case 1:
       if (watered2 == '0' && (int)timing[1][0] == 1 && timeClient.getHours() >= (int)timing[1][1] && timeClient.getMinutes() >= (int)timing[1][2]) {
-        if (cold) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
@@ -115,7 +129,11 @@ void loop() {
       break;
     case 2:
       if (watered2 == '0' && (int)timing[2][0] == 1 && timeClient.getHours() >= (int)timing[2][1] && timeClient.getMinutes() >= (int)timing[2][2]) {
-        if (cold) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }        
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
@@ -129,7 +147,11 @@ void loop() {
       break;
     case 3:
       if (watered2 == '0' && (int)timing[3][0] == 1 && timeClient.getHours() >= (int)timing[3][1] && timeClient.getMinutes() >= (int)timing[3][2]) {
-        if (cold) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }        
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
@@ -144,7 +166,11 @@ void loop() {
       break;
     case 4:
       if (watered2 == '0' && (int)timing[4][0] == 1 && timeClient.getHours() >= (int)timing[4][1] && timeClient.getMinutes() >= (int)timing[4][2]) {
-        if (cold) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }        
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
@@ -157,8 +183,12 @@ void loop() {
       }
       break;
     case 5:
-      if (watered2 =='0'  && (int)timing[5][0] == 1 && timeClient.getHours() >= (int)timing[5][1] && timeClient.getMinutes() >= (int)timing[5][2]) {
-        if (cold) {
+      if (watered2 =='0' && (int)timing[5][0] == 1 && timeClient.getHours() >= (int)timing[5][1] && timeClient.getMinutes() >= (int)timing[5][2]) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }        
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
@@ -172,7 +202,11 @@ void loop() {
       break;
     case 6:
       if (watered2 == '0' && (int)timing[6][0] == 1 && timeClient.getHours() >= (int)timing[6][1] && timeClient.getMinutes() >= (int)timing[6][2]) {
-        if (cold) {
+        if(asked == false){
+          client.publish(topic_rain_status, "1"); 
+          asked = true;
+          }        
+        if (cold && ground_wet == 0) {
           digitalWrite(ledPin, HIGH);
           digitalWrite(SOLENOID, HIGH);
           previousMillis = millis();
@@ -235,6 +269,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
     previousMillis = millis();
     interval = watering_time.toInt() * 1000 * 60;
+    Serial.println("Watering time: ");
+    Serial.println(watering_time);
 
   }
   if(strcmp(topic, topic_watering) ==0){
@@ -277,6 +313,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
       timing[6][i] = (char)payload[i];
     }
   }
+  if (strcmp(topic, topic_is_ground_wet) == 0) {
+    ground_wet = (char)payload[0] - '0';
+    Serial.println();
+    Serial.println(ground_wet);
+    if(ground_wet == 1)
+      asked = false;
+  }
 }
 
 void reconnect() {
@@ -285,6 +328,7 @@ void reconnect() {
     if (client.connect(clientID)) {
       client.subscribe(topic_solenoid, 0);
       client.subscribe(topic_watering, 0);
+      client.subscribe(topic_is_ground_wet,0);
       for (int i = 0; i < 7; ++i)
         client.subscribe(topics_solenoid[i], 0);
     }
